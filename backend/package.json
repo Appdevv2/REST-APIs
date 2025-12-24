@@ -1,0 +1,19 @@
+{
+  "name": "rest-apis",
+  "version": "1.0.0",
+  "description": "learn rest apis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --env-file=.env --watch index.js"
+  },
+  "author": "Gulraiz",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.1",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.1",
+    "mongoose": "^9.0.2",
+    "multer": "^2.0.2"
+  }
+}
