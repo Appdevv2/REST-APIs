@@ -24,7 +24,7 @@ const App = () => {
 
   const [showBackdrop, setShowBackdrop] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
-  const [isAuth, setIsAuth] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
   const [token, setToken] = useState(null);
   const [userId, setUserId] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
@@ -101,75 +101,87 @@ const App = () => {
     setError(null);
   }, []);
 
-  const loginHandler = useCallback(
-    (event, authData) => {
-      event.preventDefault();
-      setAuthLoading(true);
+  const loginHandler = (event, authData) => {
+    event.preventDefault();
+    setAuthLoading(true);
+    console.log("authData", authData);
 
-      fetch("URL")
-        .then((res) => {
-          if (res.status === 422) throw new Error("Validation failed.");
-          if (res.status !== 200 && res.status !== 201) {
-            throw new Error("Could not authenticate you!");
-          }
-          return res.json();
-        })
-        .then((resData) => {
-          setIsAuth(true);
-          setToken(resData.token);
-          setUserId(resData.userId);
-          setAuthLoading(false);
+    fetch("http://localhost:3005/auth/login", {
+      method: "POST",
+      body: JSON.stringify({
+        email: authData.email,
+        password: authData.password,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.status === 422) throw new Error("Validation failed.");
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error("Could not authenticate you!");
+        }
+        return res.json();
+      })
+      .then((resData) => {
+        setIsAuth(true);
+        setToken(resData.token);
+        setUserId(resData.userId);
+        setAuthLoading(false);
 
-          localStorage.setItem("token", resData.token);
-          localStorage.setItem("userId", resData.userId);
+        localStorage.setItem("token", resData.token);
+        localStorage.setItem("userId", resData.userId);
 
-          const remainingMilliseconds = 60 * 60 * 1000; // 1 hour
-          const expiryDate = new Date(
-            new Date().getTime() + remainingMilliseconds
+        const remainingMilliseconds = 60 * 60 * 1000; // 1 hour
+        const expiryDate = new Date(
+          new Date().getTime() + remainingMilliseconds
+        );
+        localStorage.setItem("expiryDate", expiryDate.toISOString());
+
+        setAutoLogout(remainingMilliseconds);
+      })
+      .catch((err) => {
+        setIsAuth(false);
+        setAuthLoading(false);
+        setError(err);
+      });
+  };
+
+  const signupHandler = (event, authData) => {
+    event.preventDefault();
+    setAuthLoading(true);
+
+    const { signupForm } = authData;
+
+    fetch("http://localhost:3005/auth/signup", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: signupForm.email.value,
+        password: signupForm.password.value,
+        name: signupForm.name.value,
+      }),
+    })
+      .then((res) => {
+        if (res.status === 422) {
+          throw new Error(
+            "Validation failed. Make sure the email address isn't used yet!"
           );
-          localStorage.setItem("expiryDate", expiryDate.toISOString());
-
-          setAutoLogout(remainingMilliseconds);
-        })
-        .catch((err) => {
-          setIsAuth(false);
-          setAuthLoading(false);
-          setError(err);
-        });
-    },
-    [setAutoLogout]
-  );
-
-  const signupHandler = useCallback(
-    (event, authData) => {
-      event.preventDefault();
-      setAuthLoading(true);
-
-      fetch("URL")
-        .then((res) => {
-          if (res.status === 422) {
-            throw new Error(
-              "Validation failed. Make sure the email address isn't used yet!"
-            );
-          }
-          if (res.status !== 200 && res.status !== 201) {
-            throw new Error("Creating a user failed!");
-          }
-          return res.json();
-        })
-        .then(() => {
-          setIsAuth(false);
-          setAuthLoading(false);
-          navigate("/", { replace: true }); // v6 replacement for history.replace("/")
-        })
-        .catch((err) => {
-          setIsAuth(false);
-          setAuthLoading(false);
-          setError(err);
-        });
-    },
-    [navigate]
-  );
+        }
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error("Creating a user failed!");
+        }
+        return res.json();
+      })
+      .then(() => {
+        setAuthLoading(false);
+        navigate("/", { replace: true });
+      })
+      .catch((err) => {
+        setAuthLoading(false);
+        setError(err);
+      });
+  };
 
   return (
     <Fragment>

@@ -3,24 +3,45 @@ const path = require("path");
 const Post = require("../models/post");
 const { validationResult } = require("express-validator");
 
+const LIMIT_PER_PAGE = 2;
+
 exports.getFeed = (req, res, next) => {
-  Post.find()
-    .then((posts) => {
-      if (!posts) {
-        return res.status(404).json({ message: "No post yet please add some" });
-      }
-      res.status(200).json({
-        message: "feed fetched successfully",
-        posts: posts,
-      });
+  const page = req.query.page || 1;
+  let totalItems;
+
+  Post.countDocuments()
+    .then((count) => {
+      totalItems = count;
+      Post.find()
+        .skip((page - 1) * LIMIT_PER_PAGE)
+        .limit(LIMIT_PER_PAGE)
+        .then((posts) => {
+          if (!posts) {
+            return res
+              .status(404)
+              .json({ message: "No post yet please add some" });
+          }
+          res.status(200).json({
+            message: "feed fetched successfully",
+            posts: posts,
+            // currentPage: page,
+            // nextPage: page + 1,
+            // previousPage: page - 1,
+            totalItems: totalItems,
+          });
+        })
+        .catch((err) => console.log("err", err));
     })
-    .catch((err) => console.log("err", err));
+    .catch((err) => {
+      console.log("err", err);
+    });
 };
 
 exports.createPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
   const image = req.file;
+  const creator = req.userId;
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -39,7 +60,7 @@ exports.createPost = (req, res, next) => {
     title: title,
     imageUrl: imageUrl,
     content: content,
-    creator: { name: "Gulraiz" },
+    creator: creator,
   });
 
   post
@@ -124,7 +145,7 @@ exports.deletePost = (req, res, next) => {
         return res.status(404).json({ message: "Post not found by given id" });
       }
       clearImage(post.imageUrl);
-      return post.deleteOne(post._id);
+      return Post.findByIdAndDelete(post._id);
     })
     .then((result) => {
       return res.status(200).json({ message: "Post Deleted" });

@@ -46,12 +46,12 @@ class Signup extends Component {
       };
       let formIsValid = true;
       for (const inputName in updatedForm) {
+        if (inputName === "formIsValid") continue;
         formIsValid = formIsValid && updatedForm[inputName].valid;
       }
-      return {
-        signupForm: updatedForm,
-        formIsValid: formIsValid,
-      };
+      updatedForm.formIsValid = formIsValid;
+
+      return { signupForm: updatedForm };
     });
   };
 

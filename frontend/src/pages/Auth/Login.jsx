@@ -40,8 +40,10 @@ class Login extends Component {
       };
       let formIsValid = true;
       for (const inputName in updatedForm) {
+        if (inputName === "formIsValid") continue;
         formIsValid = formIsValid && updatedForm[inputName].valid;
       }
+      updatedForm.formIsValid = formIsValid;
       return {
         loginForm: updatedForm,
         formIsValid: formIsValid,

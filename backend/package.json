@@ -10,9 +10,11 @@
   "author": "Gulraiz",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.1",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.0.2",
     "multer": "^2.0.2"
   }
